@@ -25,7 +25,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 
 	private String tarjeta = null;   // mantiene la tarjeta del cliente actual
 	private Integer codigoATM = null;
-	
 	/*
 	 * La información del cajero ATM se recupera del archivo que se encuentra definido en ModeloATM.CONFIG
 	 */
@@ -52,6 +51,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	}
 
 	@Override
+	/** 
+	 *      Código que autentica que exista una tarjeta con ese pin (el pin guardado en la BD está en MD5)
+	 *      En caso exitoso deberá registrar la tarjeta en la propiedad tarjeta y retornar true.
+	 *      Si la autenticación no es exitosa porque no coincide el pin o la tarjeta no existe deberá retornar falso
+	 *      y si hubo algún otro error deberá producir una excepción.
+	 */
 	public boolean autenticarUsuarioAplicacion(String tarjeta, String pin) throws Exception{
 		boolean ret = false;
 		logger.info("Se intenta autenticar la tarjeta {} con pin {}", tarjeta, pin);
@@ -80,20 +85,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
 		}
-
-		/** 
-		 * TODO Código que autentica que exista una tarjeta con ese pin (el pin guardado en la BD está en MD5)
-		 *      En caso exitoso deberá registrar la tarjeta en la propiedad tarjeta y retornar true.
-		 *      Si la autenticación no es exitosa porque no coincide el pin o la tarjeta no existe deberá retornar falso
-		 *      y si hubo algún otro error deberá producir una excepción.
-		 */
 		return ret;
 	}
 	
 	
 	@Override
-	public Double obtenerSaldo() throws Exception
-	{
+	public Double obtenerSaldo() throws Exception{
 		logger.info("Se intenta obtener el saldo de cliente {}", 3);
 
 		if (this.tarjeta == null ) {
@@ -101,16 +98,36 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}
 
 		/** 
-		 * TODO Obtiene el saldo.
+		 *  Obtiene el saldo.
 		 *      Debe capturar la excepción SQLException y propagar una Exception más amigable.
 		 */
-
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 */
-		Double saldo = (double) 1001;		
-		return saldo;
-		// Fin datos estáticos de prueba.
+		Double saldo_obtenido = null;
+		
+		String sql = "SELECT * FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? ORDER BY fecha DESC, hora DESC;";
+		
+		logger.debug("SELECT * FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} ORDER BY fecha DESC, hora DESC;",tarjeta);
+		
+		
+		try {
+			PreparedStatement obtener = conexion.prepareStatement(sql);
+			obtener.setString(1, tarjeta);
+			obtener.execute();
+			ResultSet rs = obtener.getResultSet();
+			
+			if(rs.next()) {
+				saldo_obtenido = rs.getDouble("saldo");
+			} else {
+				throw new Exception("No se pudo obtener el saldo");	
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+			
+		}
+		return saldo_obtenido;
 	}	
 
 	@Override
@@ -123,6 +140,56 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	{
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
+		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
+		
+		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} LIMIT {};",tarjeta,cantidad);
+		
+
+		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
+		try {
+			PreparedStatement cargar = conexion.prepareStatement(sql);
+			cargar.setString(1, tarjeta);
+			cargar.setInt(2, cantidad);
+			cargar.execute();
+			ResultSet rs = cargar.getResultSet();
+			
+			
+			TransaccionCajaAhorroBean fila;
+			while(rs.next()) {
+				fila = new TransaccionCajaAhorroBeanImpl();
+				fila.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("Fecha"), rs.getString("Hora")));
+				fila.setTransaccionTipo(rs.getString("tipo"));
+				fila.setTransaccionMonto(rs.getDouble("monto"));
+				
+				String codCaja = rs.getString("cod_caja");
+				Integer codigo = 0;
+				if(!codCaja.equals("NULL"))
+					codigo = Integer.parseInt(codCaja);
+				fila.setTransaccionCodigoCaja(codigo);
+				
+				String numeroDestino = rs.getString("destino");
+				Integer numeroD = 0;
+				if(!numeroDestino.equals("NULL"))
+					numeroD = Integer.parseInt(numeroDestino);
+				fila.setCajaAhorroDestinoNumero(numeroD);	
+				
+				lista.add(fila);
+			}
+			/*
+			} else {
+				throw new Exception("No se pudo obtener el saldo");	
+			}*/
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+			
+		}
+		return lista;
+		
+		
 		/**
 		 * TODO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
@@ -142,7 +209,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		+------------+----------+---------------+---------+----------+---------+
  		 */
 		
-		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
+		/*ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
 		TransaccionCajaAhorroBean fila1 = new TransaccionCajaAhorroBeanImpl();
 		fila1.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-16","11:10:00"));
 		fila1.setTransaccionTipo("transferencia");
@@ -183,7 +250,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		fila5.setCajaAhorroDestinoNumero(7);	
 		lista.add(fila5);
 		
-		return lista;
+		return lista;*/
 		
 		// Fin datos estáticos de prueba.
 	}	

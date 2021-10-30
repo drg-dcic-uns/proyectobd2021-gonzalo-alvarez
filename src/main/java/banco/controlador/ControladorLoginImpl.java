@@ -116,24 +116,29 @@ public class ControladorLoginImpl implements ControladorLogin {
 			
 			if (modeloATM.conectar(usuario.getUsername(), usuario.getPassword())) {
 			
-				if (modeloATM.autenticarUsuarioAplicacion(tarjeta, String.valueOf(pin))) {
+				try {
+					if (modeloATM.autenticarUsuarioAplicacion(tarjeta, String.valueOf(pin))) {
 
-					logger.info("Usuario {} autenticado","Cliente");
-				
-					VentanaATM ventanaATM = new VentanaATMImpl();
-					ControladorATM controladorATM = new ControladorATMImpl(ventanaATM, modeloATM);
+						logger.info("Usuario {} autenticado","Cliente");
 					
-					logger.info("Transfiere el control al nuevo controlador");
-					controladorATM.ejecutar();
-					
-					logger.info("Informa a la vista que puede eliminar la ventana de login.");					
-					this.ventana.eliminarVentana();
-					
-				}
-				else
-				{
+						VentanaATM ventanaATM = new VentanaATMImpl();
+						ControladorATM controladorATM = new ControladorATMImpl(ventanaATM, modeloATM);
+						
+						logger.info("Transfiere el control al nuevo controlador");
+						controladorATM.ejecutar();
+						
+						logger.info("Informa a la vista que puede eliminar la ventana de login.");					
+						this.ventana.eliminarVentana();
+						
+					}
+					else
+					{
+						logger.error("Hubo un error en la autenticación.");
+						this.ventana.informar("El usuario o contraseña ingresados son incorrectos.");
+					}
+				} catch (Exception e) {
 					logger.error("Hubo un error en la autenticación.");
-					this.ventana.informar("El usuario o contraseña ingresados son incorrectos.");
+					this.ventana.informar(e.getMessage());
 				}
 			}
 			else
