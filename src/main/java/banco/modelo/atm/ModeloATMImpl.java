@@ -58,6 +58,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	 *      y si hubo algún otro error deberá producir una excepción.
 	 */
 	public boolean autenticarUsuarioAplicacion(String tarjeta, String pin) throws Exception{
+		/*TODO HECHO autenticar*/
 		boolean ret = false;
 		logger.info("Se intenta autenticar la tarjeta {} con pin {}", tarjeta, pin);
 		
@@ -91,11 +92,13 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	
 	@Override
 	public Double obtenerSaldo() throws Exception{
+		/*TODO HECHO obtenerSaldo */
 		logger.info("Se intenta obtener el saldo de cliente {}", 3);
 
 		if (this.tarjeta == null ) {
 			throw new Exception("El cliente no ingresó la tarjeta");
 		}
+		
 
 		/** 
 		 *  Obtiene el saldo.
@@ -138,6 +141,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	@Override
 	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos(int cantidad) throws Exception
 	{
+		/*TODO HECHO cargarUltimosMovimientos*/
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
 		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
@@ -194,65 +198,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 * TODO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 */
-		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 * 
-		+------------+----------+---------------+---------+----------+---------+
-		| fecha      | hora     | tipo          | monto   | cod_caja | destino |
-		+------------+----------+---------------+---------+----------+---------+
-		| 2021-09-16 | 11:10:00 | transferencia | -700.00 |       18 |      32 |
-		| 2021-09-15 | 17:20:00 | extraccion    | -200.00 |        2 |    NULL |
-		| 2021-09-14 | 09:03:00 | deposito      | 1600.00 |        2 |    NULL |
-		| 2021-09-13 | 13:30:00 | debito        |  -50.00 |     NULL |    NULL |
-		| 2021-09-12 | 15:00:00 | transferencia | -400.00 |       41 |       7 |
-		+------------+----------+---------------+---------+----------+---------+
- 		 */
-		
-		/*ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
-		TransaccionCajaAhorroBean fila1 = new TransaccionCajaAhorroBeanImpl();
-		fila1.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-16","11:10:00"));
-		fila1.setTransaccionTipo("transferencia");
-		fila1.setTransaccionMonto(-700.00);
-		fila1.setTransaccionCodigoCaja(18);
-		fila1.setCajaAhorroDestinoNumero(32);
-		lista.add(fila1);
-
-		TransaccionCajaAhorroBean fila2 = new TransaccionCajaAhorroBeanImpl();
-		fila2.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-15","17:20:00"));
-		fila2.setTransaccionTipo("extraccion");
-		fila2.setTransaccionMonto(-200.00);
-		fila2.setTransaccionCodigoCaja(2);
-		fila2.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila2);
-		
-		TransaccionCajaAhorroBean fila3 = new TransaccionCajaAhorroBeanImpl();
-		fila3.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-14","09:03:00"));
-		fila3.setTransaccionTipo("deposito");
-		fila3.setTransaccionMonto(1600.00);
-		fila3.setTransaccionCodigoCaja(2);
-		fila3.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila3);		
-
-		TransaccionCajaAhorroBean fila4 = new TransaccionCajaAhorroBeanImpl();
-		fila4.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-13","13:30:00"));
-		fila4.setTransaccionTipo("debito");
-		fila4.setTransaccionMonto(-50.00);
-		fila4.setTransaccionCodigoCaja(0);
-		fila4.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila4);	
-		
-		TransaccionCajaAhorroBean fila5 = new TransaccionCajaAhorroBeanImpl();
-		fila5.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-12","15:00:00"));
-		fila5.setTransaccionTipo("transferencia");
-		fila5.setTransaccionMonto(-400.00);
-		fila5.setTransaccionCodigoCaja(41);
-		fila5.setCajaAhorroDestinoNumero(7);	
-		lista.add(fila5);
-		
-		return lista;*/
-		
-		// Fin datos estáticos de prueba.
 	}	
 	
 	@Override
@@ -260,71 +205,56 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throws Exception {
 
 		/**
-		 * TODO Deberá recuperar los ultimos del cliente que se han realizado entre las fechas indicadas.
+		 * TODO Deberá recuperar los ultimos movimientos del cliente que se han realizado entre las fechas indicadas.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
-		 * 		Debe generar excepción sin las fechas son erroneas (ver descripción en interface)
+		 * 		Debe generar excepción si las fechas son erroneas (ver descripción en interface)
 		 */
+				
+		logger.info("Busca las ultimas transacciones en la BD de la tarjeta {} entre las fechas {} y {}",Integer.valueOf(this.tarjeta.trim()), desde, hasta);
+
+		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha > ? and fecha < ?)";
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.
-		 * 
-		+------------+----------+---------------+---------+----------+---------+
-		| fecha      | hora     | tipo          | monto   | cod_caja | destino |
-		+------------+----------+---------------+---------+----------+---------+
-		| 2021-09-16 | 11:10:00 | transferencia | -700.00 |       18 |      32 |
-		| 2021-09-15 | 17:20:00 | extraccion    | -200.00 |        2 |    NULL |
-		| 2021-09-14 | 09:03:00 | deposito      | 1600.00 |        2 |    NULL |
-		| 2021-09-13 | 13:30:00 | debito        |  -50.00 |     NULL |    NULL |
-		| 2021-09-12 | 15:00:00 | transferencia | -400.00 |       41 |       7 |
-		+------------+----------+---------------+---------+----------+---------+
- 		 */
+		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha > {} and fecha < {})",tarjeta,desde,hasta);
 		
+
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
-		TransaccionCajaAhorroBean fila1 = new TransaccionCajaAhorroBeanImpl();
-		fila1.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-16","11:10:00"));
-		fila1.setTransaccionTipo("transferencia");
-		fila1.setTransaccionMonto(-700.00);
-		fila1.setTransaccionCodigoCaja(18);
-		fila1.setCajaAhorroDestinoNumero(32);
-		lista.add(fila1);
-
-		TransaccionCajaAhorroBean fila2 = new TransaccionCajaAhorroBeanImpl();
-		fila2.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-15","17:20:00"));
-		fila2.setTransaccionTipo("extraccion");
-		fila2.setTransaccionMonto(-200.00);
-		fila2.setTransaccionCodigoCaja(2);
-		fila2.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila2);
-		
-		TransaccionCajaAhorroBean fila3 = new TransaccionCajaAhorroBeanImpl();
-		fila3.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-14","09:03:00"));
-		fila3.setTransaccionTipo("deposito");
-		fila3.setTransaccionMonto(1600.00);
-		fila3.setTransaccionCodigoCaja(2);
-		fila3.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila3);		
-
-		TransaccionCajaAhorroBean fila4 = new TransaccionCajaAhorroBeanImpl();
-		fila4.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-13","13:30:00"));
-		fila4.setTransaccionTipo("debito");
-		fila4.setTransaccionMonto(-50.00);
-		fila4.setTransaccionCodigoCaja(0);
-		fila4.setCajaAhorroDestinoNumero(0);	
-		lista.add(fila4);	
-		
-		TransaccionCajaAhorroBean fila5 = new TransaccionCajaAhorroBeanImpl();
-		fila5.setTransaccionFechaHora(Fechas.convertirStringADate("2021-09-12","15:00:00"));
-		fila5.setTransaccionTipo("transferencia");
-		fila5.setTransaccionMonto(-400.00);
-		fila5.setTransaccionCodigoCaja(41);
-		fila5.setCajaAhorroDestinoNumero(7);	
-		lista.add(fila5);
-		
-		logger.debug("Retorna una lista con {} elementos", lista.size());
-		
+		try {
+			PreparedStatement cargar = conexion.prepareStatement(sql);
+			cargar.setString(1, tarjeta);
+			cargar.setDate(2, Fechas.convertirDateADateSQL(desde));
+			cargar.setDate(3, Fechas.convertirDateADateSQL(hasta));
+			cargar.execute();
+			ResultSet rs = cargar.getResultSet();
+			
+			
+			TransaccionCajaAhorroBean fila;
+			while(rs.next()) {
+				fila = new TransaccionCajaAhorroBeanImpl();
+				fila.setTransaccionFechaHora(Fechas.convertirStringADate(rs.getString("Fecha"), rs.getString("Hora")));
+				fila.setTransaccionTipo(rs.getString("tipo"));
+				fila.setTransaccionMonto(rs.getDouble("monto"));
+				
+				String codCaja = rs.getString("cod_caja");
+				Integer codigo = 0;
+				if(!codCaja.equals("NULL"))
+					codigo = Integer.parseInt(codCaja);
+				fila.setTransaccionCodigoCaja(codigo);
+				
+				String numeroDestino = rs.getString("destino");
+				Integer numeroD = 0;
+				if(!numeroDestino.equals("NULL"))
+					numeroD = Integer.parseInt(numeroDestino);
+				fila.setCajaAhorroDestinoNumero(numeroD);	
+				
+				lista.add(fila);
+			}
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		}
 		return lista;
-		
-		// Fin datos estáticos de prueba.
 	}
 	
 	@Override
