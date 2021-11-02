@@ -52,13 +52,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 
 	@Override
 	/** 
-	 *      Código que autentica que exista una tarjeta con ese pin (el pin guardado en la BD está en MD5)
+	 * TODO HECHO Código que autentica que exista una tarjeta con ese pin (el pin guardado en la BD está en MD5)
 	 *      En caso exitoso deberá registrar la tarjeta en la propiedad tarjeta y retornar true.
 	 *      Si la autenticación no es exitosa porque no coincide el pin o la tarjeta no existe deberá retornar falso
 	 *      y si hubo algún otro error deberá producir una excepción.
 	 */
 	public boolean autenticarUsuarioAplicacion(String tarjeta, String pin) throws Exception{
-		/*TODO HECHO autenticar*/
 		boolean ret = false;
 		logger.info("Se intenta autenticar la tarjeta {} con pin {}", tarjeta, pin);
 		
@@ -92,7 +91,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	
 	@Override
 	public Double obtenerSaldo() throws Exception{
-		/*TODO HECHO obtenerSaldo */
 		logger.info("Se intenta obtener el saldo de cliente {}", 3);
 
 		if (this.tarjeta == null ) {
@@ -101,7 +99,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 
 		/** 
-		 *  Obtiene el saldo.
+		 *  TODO HECHO Obtiene el saldo.
 		 *      Debe capturar la excepción SQLException y propagar una Exception más amigable.
 		 */
 		Double saldo_obtenido = null;
@@ -141,7 +139,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	@Override
 	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos(int cantidad) throws Exception
 	{
-		/*TODO HECHO cargarUltimosMovimientos*/
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
 		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
@@ -195,7 +192,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		
 		/**
-		 * TODO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
+		 * TODO HECHO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 */
 	}	
@@ -205,7 +202,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			throws Exception {
 
 		/**
-		 * TODO Deberá recuperar los ultimos movimientos del cliente que se han realizado entre las fechas indicadas.
+		 * TODO HECHO Deberá recuperar los ultimos movimientos del cliente que se han realizado entre las fechas indicadas.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si las fechas son erroneas (ver descripción en interface)
 		 */

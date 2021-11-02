@@ -42,19 +42,40 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	public boolean autenticarUsuarioAplicacion(String legajo, String password) throws Exception {
 		logger.info("Se intenta autenticar el legajo {} con password {}", legajo, password);
 		/** 
-		 * TODO Código que autentica que exista un legajo de empleado y que el password corresponda a ese legajo
+		 * TODO HECHO Código que autentica que exista un legajo de empleado y que el password corresponda a ese legajo
 		 *      (el password guardado en la BD está en MD5) 
 		 *      En caso exitoso deberá registrar el legajo en la propiedad legajo y retornar true.
 		 *      Si la autenticación no es exitosa porque el legajo no es válido o el password es incorrecto
 		 *      deberá retornar falso y si hubo algún otro error deberá producir una excepción.
 		 */
+		boolean ret = false;
+		logger.info("Se intenta autenticar el legajo {} con contraseña {}", legajo, password);
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		this.legajo = 1;
-		return true;
-		// Fin datos estáticos de prueba.
+		String sql = "SELECT legajo, password FROM empleado WHERE legajo =? and password = md5(?)";
+		
+		logger.debug("SELECT legajo, password FROM empleado WHERE legajo = {} and password = md5({})", legajo, password);
+		
+		
+		try {
+			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar.setString(1, legajo);
+			autenticar.setString(2, password);
+			autenticar.execute();
+			ResultSet rs = autenticar.getResultSet();
+			
+			if(rs.next()) {
+				this.legajo = Integer.parseInt(legajo);
+				ret = true;
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+			
+		}
+		return ret;
 	}
 	
 	@Override
@@ -151,19 +172,40 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	@Override	
 	public Integer prestamoVigente(int nroCliente) throws Exception 
 	{
-		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
-
 		/** 
 		 * TODO Busca algún prestamo del cliente que tenga cuotas sin pagar (vigente) retornando el nro_prestamo
 		 *      si no existe prestamo del cliente o todos están pagos retorna null.
 		 *      Si hay una excepción la propaga con un mensaje apropiado.
-		 */
+		 **/
+		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
+		Integer ret = null;
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		return null;
-		// Fin datos estáticos de prueba.
+		String sql = "SELECT legajo, password FROM empleado WHERE legajo =? and password = md5(?)";
+		
+		logger.debug("SELECT legajo, password FROM empleado WHERE legajo = {} and password = md5({})", legajo, password);
+		
+		
+		try {
+			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar.setString(1, legajo);
+			autenticar.setString(2, password);
+			autenticar.execute();
+			ResultSet rs = autenticar.getResultSet();
+			
+			if(rs.next()) {
+				this.legajo = Integer.parseInt(legajo);
+				ret = true;
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+			
+		}
+		return ret;
+		return ret;
 	}
 
 
