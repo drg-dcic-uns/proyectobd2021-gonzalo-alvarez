@@ -22,27 +22,52 @@ public class DAOClienteImpl implements DAOCliente {
 	
 	@Override
 	public ClienteBean recuperarCliente(String tipoDoc, int nroDoc) throws Exception {
-
-		logger.info("recupera el cliente con documento de tipo {} y nro {}.", tipoDoc, nroDoc);
 		
 		/**
-		 * TODO Recuperar el cliente que tenga un documento que se corresponda con los parámetros recibidos.  
+		 * TODO HECHO Recuperar el cliente que tenga un documento que se corresponda con los parámetros recibidos.  
 		 *		Deberá generar o propagar una excepción si no existe dicho cliente o hay un error de conexión.		
 		 */
 		
 		/*
 		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
 		 */
+
+
+		logger.info("recupera el cliente con documento de tipo {} y nro {}.", tipoDoc, nroDoc);
 		
-		ClienteBean cliente = new ClienteBeanImpl();
-		cliente.setNroCliente(3);
-		cliente.setApellido("Apellido3");
-		cliente.setNombre("Nombre3");
-		cliente.setTipoDocumento("DNI");
-		cliente.setNroDocumento(3);
-		cliente.setDireccion("Direccion3");
-		cliente.setTelefono("0291-3333333");
-		cliente.setFechaNacimiento(Fechas.convertirStringADate("1983-03-03","13:30:00"));
+		String sql = "SELECT * FROM cliente WHERE tipo_doc = ? and nro_doc = ?";
+		
+		logger.debug("SELECT * FROM cliente WHERE tipo_doc = {} and nro_doc = {}", tipoDoc, nroDoc);
+
+		ClienteBean cliente = null;
+		
+		try {
+			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar.setString(1, tipoDoc);
+			autenticar.setInt(2, nroDoc);
+			autenticar.execute();
+			ResultSet rs = autenticar.getResultSet();
+			
+			if(rs.next()) {
+				cliente = new ClienteBeanImpl();
+				cliente.setNroCliente(rs.getInt("nro_cliente"));
+				cliente.setNombre(rs.getString("nombre"));
+				cliente.setApellido(rs.getString("apellido"));
+				cliente.setTipoDocumento(rs.getString("tipo_doc"));
+				cliente.setNroDocumento(rs.getInt("nro_doc"));
+				cliente.setDireccion(rs.getString("direccion"));
+				cliente.setTelefono(rs.getString("telefono"));
+				cliente.setFechaNacimiento(rs.getDate("fecha_nac"));
+			}else {
+				throw new Exception ("No se encontró el cliente con " + tipoDoc + ":" + nroDoc);
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+		}
 		
 		return cliente;		
 

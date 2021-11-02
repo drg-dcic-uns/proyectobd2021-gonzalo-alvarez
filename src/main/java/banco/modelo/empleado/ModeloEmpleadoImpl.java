@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import banco.modelo.ModeloImpl;
+import banco.modelo.atm.TransaccionCajaAhorroBean;
+import banco.modelo.atm.TransaccionCajaAhorroBeanImpl;
 import banco.modelo.empleado.beans.ClienteBean;
 import banco.modelo.empleado.beans.ClienteMorosoBean;
 import banco.modelo.empleado.beans.DAOCliente;
@@ -25,6 +27,7 @@ import banco.modelo.empleado.beans.DAOPrestamoImpl;
 import banco.modelo.empleado.beans.EmpleadoBean;
 import banco.modelo.empleado.beans.PagoBean;
 import banco.modelo.empleado.beans.PrestamoBean;
+import banco.utils.Fechas;
 
 public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 
@@ -110,20 +113,44 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	@Override
 	public double obtenerTasa(double monto, int cantidadMeses) throws Exception {
 
-		logger.info("Busca la tasa correspondiente a el monto {} con una cantidad de meses {}", monto, cantidadMeses);
 
 		/** 
-		 * TODO Debe buscar la tasa correspondiente según el monto y la cantidadMeses. 
+		 * TODO HECHO Debe buscar la tasa correspondiente según el monto y la cantidadMeses. 
 		 *      Deberia propagar una excepción si hay algún error de conexión o 
 		 *      no encuentra el monto dentro del [monto_inf,monto_sup] y la cantidadMeses.
 		 */
+
+		logger.info("Busca la tasa correspondiente al monto {} con una cantidad de meses {}", monto, cantidadMeses);
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
-		double tasa = 23.00;
-   		return tasa;
-     	// Fin datos estáticos de prueba.
+		String sql = "SELECT tasa FROM tasa_prestamo WHERE ? > monto_inf and ? < monto_sup and periodo = ?";
+		
+		logger.debug("SELECT tasa FROM tasa_prestamo WHERE {} > monto_inf and {} < monto_sup and periodo = {}", monto, monto, cantidadMeses);
+		
+		double tasa = 0;
+		try {
+			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar.setDouble(1, monto);
+			autenticar.setDouble(2, monto);
+			autenticar.setInt(3, cantidadMeses);
+			autenticar.execute();
+			ResultSet rs = autenticar.getResultSet();
+			
+			if(rs.next()) {
+				tasa = rs.getDouble("tasa");
+			}else {
+				throw new Exception("No se pudo obtener la tasa para ese monto y esa cantidad de meses");	
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+			
+		}
+		return tasa;
+		
+		
 	}
 
 	@Override
@@ -147,54 +174,69 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 
 	@Override
 	public ArrayList<Integer> obtenerCantidadMeses(double monto) throws Exception {
-		logger.info("recupera los períodos (cantidad de meses) según el monto {} para el prestamo.", monto);
 
 		/** 
-		 * TODO Debe buscar los períodos disponibles según el monto. 
+		 * TODO HECHO Debe buscar los períodos disponibles según el monto. 
 		 *      Deberia propagar una excepción si hay algún error de conexión o 
 		 *      no encuentra el monto dentro del [monto_inf,monto_sup].
 		 */
+
+		logger.info("recupera los períodos (cantidad de meses) según el monto {} para el prestamo.", monto);
+
+		String sql = "SELECT periodo FROM tasa_prestamo WHERE ? >= monto_inf and ? <= monto_sup";
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */		
+		logger.debug("SELECT periodo FROM tasa_prestamo WHERE {} > monto_inf and {} < monto_sup",monto);
+		
+
 		ArrayList<Integer> cantMeses = new ArrayList<Integer>();
-		cantMeses.add(9);
-		cantMeses.add(18);
-		cantMeses.add(27);
-		cantMeses.add(54);
-		cantMeses.add(108);
+		try {
+			PreparedStatement cargar = conexion.prepareStatement(sql);
+			cargar.setDouble(1, monto);
+			cargar.setDouble(2, monto);
+			cargar.execute();
+			ResultSet rs = cargar.getResultSet();
+			if(rs.next() == false)
+				throw new Exception ("No hay ningun periodo disponible para ese monto");
+			
+			do {
+				cantMeses.add(rs.getInt("Periodo"));
+			} while(rs.next());
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		}
 		
 		return cantMeses;
-		// Fin datos estáticos de prueba.
 	}
 
 	@Override	
 	public Integer prestamoVigente(int nroCliente) throws Exception 
 	{
 		/** 
-		 * TODO Busca algún prestamo del cliente que tenga cuotas sin pagar (vigente) retornando el nro_prestamo
+		 * TODO HECHO Busca algún prestamo del cliente que tenga cuotas sin pagar (vigente) retornando el nro_prestamo
 		 *      si no existe prestamo del cliente o todos están pagos retorna null.
 		 *      Si hay una excepción la propaga con un mensaje apropiado.
 		 **/
+		
 		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
 		Integer ret = null;
 		
-		String sql = "SELECT legajo, password FROM empleado WHERE legajo =? and password = md5(?)";
+		String sql = "SELECT nro_cliente FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = ?";
 		
-		logger.debug("SELECT legajo, password FROM empleado WHERE legajo = {} and password = md5({})", legajo, password);
+		logger.debug("SELECT nro_cliente FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = {}", nroCliente);
 		
 		
 		try {
 			PreparedStatement autenticar = conexion.prepareStatement(sql);
-			autenticar.setString(1, legajo);
-			autenticar.setString(2, password);
+			autenticar.setInt(1, nroCliente);
 			autenticar.execute();
 			ResultSet rs = autenticar.getResultSet();
 			
 			if(rs.next()) {
-				this.legajo = Integer.parseInt(legajo);
-				ret = true;
+				ret = rs.getInt("nro_cliente");
 			}
 			
 		}catch (SQLException ex) {
@@ -204,7 +246,6 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
 		}
-		return ret;
 		return ret;
 	}
 
