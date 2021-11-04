@@ -139,6 +139,11 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	@Override
 	public ArrayList<TransaccionCajaAhorroBean> cargarUltimosMovimientos(int cantidad) throws Exception
 	{
+		/**
+		 * TODO HECHO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
+		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
+		 */
+		
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
 		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
@@ -189,12 +194,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			
 		}
 		return lista;
-		
-		
-		/**
-		 * TODO HECHO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
-		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
-		 */
 	}	
 	
 	@Override
@@ -278,6 +277,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 	public int parseCuenta(String p_cuenta) throws Exception {
 		
 		logger.info("Intenta realizar el parsing de un codigo de cuenta {}", p_cuenta);
+		int cuenta = 0;
 
 		/**
 		 * TODO Verifica que el codigo de la cuenta sea valido. 
@@ -287,7 +287,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 */	
 		
 		logger.info("Encontró la cuenta en la BD.");
-        return 1;
+        return cuenta;
 	}	
 	
 	@Override

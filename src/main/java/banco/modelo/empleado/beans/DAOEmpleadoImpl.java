@@ -21,34 +21,50 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 
 	@Override
 	public EmpleadoBean recuperarEmpleado(int legajo) throws Exception {
-		logger.info("recupera el empleado que corresponde al legajo {}.", legajo);
-		
 		/**
-		 * TODO Debe recuperar los datos del empleado que corresponda al legajo pasado como parámetro.
+		 * TODO HECHO (TESTEAR) Debe recuperar los datos del empleado que corresponda al legajo pasado como parámetro.
 		 *      Si no existe deberá retornar null y 
 		 *      De ocurre algun error deberá generar una excepción.		 * 
 		 */		
+
+		logger.info("recupera el empleado que corresponde al legajo {}.", legajo);
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
+		String sql = "SELECT * FROM empleado WHERE legajo = ?";
 		
+		logger.debug("SELECT * FROM empleado WHERE legajo = {}", legajo);
+
 		EmpleadoBean empleado = null;
 		
-		empleado = new EmpleadoBeanImpl();
-		empleado.setLegajo(9);
-		empleado.setApellido("ApEmp9");
-		empleado.setNombre("NomEmp9");
-		empleado.setTipoDocumento("DNI");
-		empleado.setNroDocumento(9);
-		empleado.setDireccion("DirEmp9");
-		empleado.setTelefono("999-9999");
-		empleado.setCargo("Empleado de Prestamos");
-		empleado.setPassword("45c48cce2e2d7fbdea1afc51c7c6ad26"); // select md5(9);
-		empleado.setNroSucursal(7);
+		try {
+			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar.setInt(1, legajo);
+			recuperar.execute();
+			ResultSet rs = recuperar.getResultSet();
+			
+			if(rs.next()) {
+				empleado = new EmpleadoBeanImpl();
+				empleado.setLegajo(rs.getInt("legajo"));
+				empleado.setApellido(rs.getString("apellido"));
+				empleado.setNombre(rs.getString("nombre"));
+				empleado.setTipoDocumento(rs.getString("tipo_doc"));
+				empleado.setNroDocumento(rs.getInt("nro_doc"));
+				empleado.setDireccion(rs.getString("direccion"));
+				empleado.setTelefono(rs.getString("telefono"));
+				empleado.setCargo(rs.getString("cargo"));
+				empleado.setPassword(rs.getString("password")); // select md5(9);
+				empleado.setNroSucursal(rs.getInt("nro_suc"));
+			}else {
+				throw new Exception ("No se encontró el empleado con numero de legajo" + legajo);
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+		}
 		
 		return empleado;
-		// Fin datos estáticos de prueba.
 	}
 
 }

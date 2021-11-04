@@ -49,36 +49,51 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 
 	@Override
 	public PrestamoBean recuperarPrestamo(int nroPrestamo) throws Exception {
-		
-		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
-		
 		/**
-		 * TODO Obtiene el prestamo según el id nroPrestamo
+		 * TODO HECHO (TESTEAR) Obtiene el prestamo según el id nroPrestamo
 		 * 
 		 * @param nroPrestamo
 		 * @return Un prestamo que corresponde a ese id o null
 		 * @throws Exception si hubo algun problema de conexión
-		 */		
+		 */	
+		
+		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
+		
+		String sql = "SELECT * FROM prestamo WHERE nro_prestamo = ?";
+		
+		logger.debug("SELECT * FROM prestamo WHERE nro_prestamo = {}", nroPrestamo);
 
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 * Retorna un PretamoBean con información del prestamo nro 4
-		 */
 		PrestamoBean prestamo = null;
+		
+		try {
+			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar.setInt(1, nroPrestamo);
+			recuperar.execute();
+			ResultSet rs = recuperar.getResultSet();
 			
-		prestamo = new PrestamoBeanImpl();
-		prestamo.setNroPrestamo(4);
-		prestamo.setFecha(Fechas.convertirStringADate("2021-04-05"));
-		prestamo.setCantidadMeses(6);
-		prestamo.setMonto(20000);
-		prestamo.setTasaInteres(24);
-		prestamo.setInteres(2400);
-		prestamo.setValorCuota(3733.33);
-		prestamo.setLegajo(2);
-		prestamo.setNroCliente(2);
-   	
+			if(rs.next()) {
+				prestamo = new PrestamoBeanImpl();
+				prestamo.setNroPrestamo(rs.getInt("nro_prestamo"));
+		        prestamo.setFecha(rs.getDate("fecha"));
+		        prestamo.setCantidadMeses(rs.getInt("cant_meses"));
+		        prestamo.setMonto(rs.getDouble("monto"));
+		        prestamo.setTasaInteres(rs.getDouble("tasa_interes"));
+		        prestamo.setInteres(rs.getDouble("interes"));
+		        prestamo.setValorCuota(rs.getDouble("valor_cuota"));
+		        prestamo.setLegajo(rs.getInt("legajo"));
+		        prestamo.setNroCliente(rs.getInt("nro_cliente"));
+			}else {
+				throw new Exception ("No se encontró el prestamo con número" + nroPrestamo);
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+		}
+		
 		return prestamo;
-		// Fin datos estáticos de prueba.
 	}
 
 }

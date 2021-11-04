@@ -95,19 +95,35 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	
 	@Override
 	public ArrayList<String> obtenerTiposDocumento() throws Exception{
-		logger.info("recupera los tipos de documentos.");
 		/** 
-		 * TODO Debe retornar una lista de strings con los tipos de documentos. 
+		 * TODO HECHO (TESTEAR) Debe retornar una lista de strings con los tipos de documentos. 
 		 *      Deberia propagar una excepción si hay algún error en la consulta.
 		 */
 		
-		/*
-		 * Datos estáticos de prueba. Quitar y reemplazar por código que recupera los datos reales.  
-		 */
+		logger.info("recupera los tipos de documentos.");
+		
+		String sql = "SELECT DISTINCT tipo_doc FROM empleado";
+		
+		logger.debug("SELECT DISTINCT tipo_doc FROM empleado");
 		ArrayList<String> tipos = new ArrayList<String>();
-		tipos.add("DNI");
+		
+		try {
+			PreparedStatement obtener = conexion.prepareStatement(sql);
+			obtener.execute();
+			ResultSet rs = obtener.getResultSet();
+
+			while(rs.next()) {
+				tipos.add(rs.getString("tipo_doc"));
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+			
+		}
 		return tipos;
-		// Fin datos estáticos de prueba.
 	}	
 
 	@Override
