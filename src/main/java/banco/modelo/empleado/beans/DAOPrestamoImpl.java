@@ -25,6 +25,28 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 	@Override
 	public void crearActualizarPrestamo(PrestamoBean prestamo) throws Exception {
 
+		
+		
+		/**
+		 * TODO HECHO (TESTEAR UPDATE) Crear o actualizar el Prestamo segun el PrestamoBean prestamo. 
+		 *      Si prestamo tiene nroPrestamo es una actualizacion, si el nroPrestamo es null entonces es un nuevo prestamo.
+		 * 
+		 * @throws Exception deberá propagar la excepción si ocurre alguna. Puede capturarla para loguear los errores, ej.
+		 *				logger.error("SQLException: " + ex.getMessage());
+		 * 				logger.error("SQLState: " + ex.getSQLState());
+		 *				logger.error("VendorError: " + ex.getErrorCode());
+		 *		   pero luego deberá propagarla para que se encargue el controlador. 
+		 */
+		
+		
+		
+		String sql;
+		if(prestamo.getNroPrestamo()==null){
+			sql = "INSERT INTO PRESTAMO (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES(CURDATE(),?,?,?,?,?,?,?)";
+		}else {
+			sql = "UPDATE PRESTAMO SET fecha = CURDATE() ,cant_meses = ?,monto = ?,tasa_interes = ?,interes = ?,valor_cuota = ?,nro_cliente = ?,legajo = ?) WHERE nro_prestamo = ?";
+		}
+		
 		logger.info("Creación o actualizacion del prestamo.");
 		logger.debug("meses : {}", prestamo.getCantidadMeses());
 		logger.debug("monto : {}", prestamo.getMonto());
@@ -34,16 +56,27 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("legajo : {}", prestamo.getLegajo());
 		logger.debug("cliente : {}", prestamo.getNroCliente());
 		
-		/**
-		 * TODO Crear o actualizar el Prestamo segun el PrestamoBean prestamo. 
-		 *      Si prestamo tiene nroPrestamo es una actualizacion, si el nroPrestamo es null entonces es un nuevo prestamo.
-		 * 
-		 * @throws Exception deberá propagar la excepción si ocurre alguna. Puede capturarla para loguear los errores, ej.
-		 *				logger.error("SQLException: " + ex.getMessage());
-		 * 				logger.error("SQLState: " + ex.getSQLState());
-		 *				logger.error("VendorError: " + ex.getErrorCode());
-		 *		   pero luego deberá propagarla para que se encargue el controlador. 
-		 */
+		try {
+			PreparedStatement crear = conexion.prepareStatement(sql);
+			crear.setInt(1,prestamo.getCantidadMeses());
+			crear.setDouble(2,prestamo.getMonto());
+			crear.setDouble(3,prestamo.getTasaInteres());
+			crear.setDouble(4,prestamo.getInteres());
+			crear.setDouble(5,prestamo.getValorCuota());
+			crear.setInt(6,prestamo.getNroCliente());
+			crear.setInt(7,prestamo.getLegajo());
+			
+			if(prestamo.getNroPrestamo()!=null){
+				crear.setInt(8,prestamo.getNroPrestamo());
+			}
+			crear.executeUpdate();
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+		}
 
 	}
 
