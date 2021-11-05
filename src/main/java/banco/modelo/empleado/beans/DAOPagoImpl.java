@@ -65,10 +65,9 @@ public class DAOPagoImpl implements DAOPago {
 	@Override
 	public void registrarPagos(int nroCliente, int nroPrestamo, List<Integer> cuotasAPagar)  throws Exception {
 
-		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
 
 		/**
-		 * TODO Registra los pagos de cuotas definidos en cuotasAPagar.
+		 * TODO HECHO Registra los pagos de cuotas definidos en cuotasAPagar.
 		 * 
 		 * nroCliente asume que esta validado
 		 * nroPrestamo asume que está validado
@@ -76,5 +75,25 @@ public class DAOPagoImpl implements DAOPago {
 		 * @throws Exception Si hubo error en la conexión
 		 */		
 
+		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
+		
+		String sql = "UPDATE PAGO SET fecha_pago = CURDATE() WHERE fecha_pago IS NULL and nro_pago = ? and nro_prestamo = ?";
+		
+		try {
+			for(int i = 0; i < cuotasAPagar.size() ; i++){
+				logger.debug("UPDATE PAGO SET fecha_pago = CURDATE() WHERE fecha_pago IS NULL and nro_pago = {} and nro_prestamo = {}", nroPrestamo, cuotasAPagar.get(i));
+				PreparedStatement crear = conexion.prepareStatement(sql);
+				crear.setInt(1,cuotasAPagar.get(i));
+				crear.setDouble(2,nroPrestamo);
+				crear.executeUpdate();
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D.");
+		}
 	}
+	
 }
