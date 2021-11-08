@@ -28,7 +28,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		
 		
 		/**
-		 * TODO HECHO (TESTEAR UPDATE) Crear o actualizar el Prestamo segun el PrestamoBean prestamo. 
+		 * TODO HECHO Crear o actualizar el Prestamo segun el PrestamoBean prestamo. 
 		 *      Si prestamo tiene nroPrestamo es una actualizacion, si el nroPrestamo es null entonces es un nuevo prestamo.
 		 * 
 		 * @throws Exception deberá propagar la excepción si ocurre alguna. Puede capturarla para loguear los errores, ej.
@@ -83,7 +83,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 	@Override
 	public PrestamoBean recuperarPrestamo(int nroPrestamo) throws Exception {
 		/**
-		 * TODO HECHO (TESTEAR) Obtiene el prestamo según el id nroPrestamo
+		 * TODO HECHO Obtiene el prestamo según el id nroPrestamo
 		 * 
 		 * @param nroPrestamo
 		 * @return Un prestamo que corresponde a ese id o null

@@ -96,7 +96,7 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 	@Override
 	public ArrayList<String> obtenerTiposDocumento() throws Exception{
 		/** 
-		 * TODO HECHO (TESTEAR) Debe retornar una lista de strings con los tipos de documentos. 
+		 * TODO HECHO  Debe retornar una lista de strings con los tipos de documentos. 
 		 *      Deberia propagar una excepción si hay algún error en la consulta.
 		 */
 		

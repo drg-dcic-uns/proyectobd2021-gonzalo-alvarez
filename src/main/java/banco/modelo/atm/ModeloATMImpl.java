@@ -5,7 +5,9 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
@@ -212,8 +214,20 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha > {} and fecha < {})",tarjeta,desde,hasta);
 		
-
+		/*Si alguna de las fechas son nulas, si la fecha desde es mayor a la fecha hasta, si la fecha hasta
+		es mayor a la fecha actual o si se produce algún error de conexión*/
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
+		
+		if(desde == null || hasta == null)
+			throw new Exception("Una de las fechas es nula.");
+		
+		if(desde.after(hasta))
+			throw new Exception("La fecha desde es anterior a la fecha hasta.");
+		
+		Date actual = new Date();
+		if(hasta.after(actual))
+			throw new Exception("La fecha hasta es mayor a la fecha actual.");
+			
 		try {
 			PreparedStatement cargar = conexion.prepareStatement(sql);
 			cargar.setString(1, tarjeta);
@@ -248,7 +262,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("SQLException: " + ex.getMessage());
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
-			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+			throw new Exception("Error inesperado al consultar la B.D.");
 		}
 		return lista;
 	}
@@ -262,6 +276,42 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si las propiedades codigoATM o tarjeta no tienen valores
 		 */		
+		
+		Double saldo;
+		PreparedStatement cargar;
+		try {
+			
+			cargar = conexion.prepareStatement("start transaction;");
+			cargar.execute();
+			
+			cargar = conexion.prepareStatement("SELECT saldo FROM (trans_cajas_ahorro NATURAL JOIN tarjeta)  WHERE nro_tarjeta= ? for update;"); 
+			cargar.setString(1, this.tarjeta);
+			cargar.execute();
+			
+			cargar = conexion.prepareStatement("UPDATE (trans_cajas_ahorro NATURAL JOIN tarjeta)  SET saldo = saldo - ?  WHERE nro_tarjeta= ?;"); 
+			cargar.setDouble(1, monto);
+			cargar.setString(2, this.tarjeta);
+			cargar.executeUpdate();
+
+			cargar = conexion.prepareStatement("commit;"); 
+			cargar.execute();
+			
+			cargar = conexion.prepareStatement( "SELECT saldo FROM trans_cajas_ahorro  WHERE nro_tarjeta= ? ;"); 
+			cargar.setString(1, this.tarjeta);
+			cargar.execute();
+			
+			ResultSet rs = cargar.getResultSet();
+			saldo = rs.getDouble("saldo");
+			
+			JOptionPane.showMessageDialog(null, rs.getDouble("saldo"));
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		}
+		
 		
 		String resultado = ModeloATM.EXTRACCION_EXITOSA;
 		
@@ -280,12 +330,27 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		int cuenta = 0;
 
 		/**
-		 * TODO Verifica que el codigo de la cuenta sea valido. 
+		 * TODO HECHO (TESTEAR) Verifica que el codigo de la cuenta sea valido. 
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si la cuenta es vacia, entero negativo o no puede generar el parsing.
 		 * retorna la cuenta en formato int
 		 */	
+		try {
+			cuenta = Integer.parseInt(p_cuenta);
+			if(cuenta < 0)
+				throw new Exception("El codigo de cuenta es negativo");
+			
+			
+		} catch (NumberFormatException e) {
+			throw new Exception("El codigo de cuenta no tiene un formato válido.");
+		}
 		
+		
+		String sql = "SELECT * FROM Caja_Ahorro WHERE nro_ca = ?";
+		ResultSet rs = consulta(sql);
+		
+		if(!rs.next())
+			throw new Exception("El codigo de cuenta no existe");
 		logger.info("Encontró la cuenta en la BD.");
         return cuenta;
 	}	

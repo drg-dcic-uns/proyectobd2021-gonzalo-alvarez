@@ -26,7 +26,7 @@ public class DAOPagoImpl implements DAOPago {
 	@Override
 	public ArrayList<PagoBean> recuperarPagos(int nroPrestamo) throws Exception {
 		/** 
-		 * TODO HECHO (TESTEAR)Recupera todos los pagos del prestamo (pagos e impagos) del prestamo nroPrestamo
+		 * TODO HECHO Recupera todos los pagos del prestamo (pagos e impagos) del prestamo nroPrestamo
 		 * 	    Si ocurre algún error deberá propagar una excepción.
 		 */
 		logger.info("Inicia la recuperacion de los pagos del prestamo {}", nroPrestamo);
@@ -67,24 +67,25 @@ public class DAOPagoImpl implements DAOPago {
 
 
 		/**
-		 * TODO HECHO Registra los pagos de cuotas definidos en cuotasAPagar.
+		 * TODO Registra los pagos de cuotas definidos en cuotasAPagar.
 		 * 
 		 * nroCliente asume que esta validado
 		 * nroPrestamo asume que está validado
 		 * cuotasAPagar Debe verificar que las cuotas a pagar no estén pagas (fecha_pago = NULL)
 		 * @throws Exception Si hubo error en la conexión
 		 */		
-
+		//Haremos uso del procedure pagarCuota(IN prestamo INT, IN pago INT);
+		
 		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
 		
-		String sql = "UPDATE PAGO SET fecha_pago = CURDATE() WHERE fecha_pago IS NULL and nro_pago = ? and nro_prestamo = ?";
+		String sql = "call pagarCuota(?,?)";
 		
 		try {
 			for(int i = 0; i < cuotasAPagar.size() ; i++){
-				logger.debug("UPDATE PAGO SET fecha_pago = CURDATE() WHERE fecha_pago IS NULL and nro_pago = {} and nro_prestamo = {}", nroPrestamo, cuotasAPagar.get(i));
+				logger.debug("call pagarCuota({},{})", nroPrestamo, cuotasAPagar.get(i));
 				PreparedStatement crear = conexion.prepareStatement(sql);
-				crear.setInt(1,cuotasAPagar.get(i));
-				crear.setDouble(2,nroPrestamo);
+				crear.setDouble(1,nroPrestamo);
+				crear.setInt(2,cuotasAPagar.get(i));
 				crear.executeUpdate();
 			}
 			

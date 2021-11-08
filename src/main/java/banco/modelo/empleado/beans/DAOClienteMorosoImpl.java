@@ -31,13 +31,11 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 		logger.info("Busca los clientes morosos.");
 		
 		String sql = "SELECT COUNT(*) AS cuotas_atrasadas, nro_prestamo"
-				+ " FROM (prestamo NATURAL JOIN cliente NATURAL JOIN pago)"
-				+ " WHERE (fecha_venc < CURDATE() and fecha_pago IS NULL)"
+				+ " FROM pago WHERE (fecha_venc < CURDATE() and fecha_pago IS NULL)"
 				+ " GROUP BY nro_prestamo HAVING cuotas_atrasadas >= 2";
 		
 		logger.debug("SELECT COUNT(*) AS cuotas_atrasadas, nro_prestamo"
-				+ " FROM (prestamo NATURAL JOIN cliente NATURAL JOIN pago)"
-				+ " WHERE (fecha_venc < CURDATE() and fecha_pago IS NULL)"
+				+ " FROM pago WHERE (fecha_venc < CURDATE() and fecha_pago IS NULL)"
 				+ " GROUP BY nro_prestamo HAVING cuotas_atrasadas >= 2");
 		
 		DAOPrestamo daoPrestamo = new DAOPrestamoImpl(this.conexion);		

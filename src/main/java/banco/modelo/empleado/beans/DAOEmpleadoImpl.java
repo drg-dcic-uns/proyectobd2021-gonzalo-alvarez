@@ -22,7 +22,7 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 	@Override
 	public EmpleadoBean recuperarEmpleado(int legajo) throws Exception {
 		/**
-		 * TODO HECHO (TESTEAR) Debe recuperar los datos del empleado que corresponda al legajo pasado como parámetro.
+		 * TODO HECHO Debe recuperar los datos del empleado que corresponda al legajo pasado como parámetro.
 		 *      Si no existe deberá retornar null y 
 		 *      De ocurre algun error deberá generar una excepción.		 * 
 		 */		

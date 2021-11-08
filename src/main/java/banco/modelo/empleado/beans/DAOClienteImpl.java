@@ -77,7 +77,7 @@ public class DAOClienteImpl implements DAOCliente {
 	public ClienteBean recuperarCliente(Integer nroCliente) throws Exception {
 		
 		/**
-		 * TODO HECHO (TESTEAR) Recuperar el cliente que tenga un número de cliente de acuerdo al parámetro recibido.  
+		 * TODO HECHO Recuperar el cliente que tenga un número de cliente de acuerdo al parámetro recibido.  
 		 *		Deberá generar o propagar una excepción si no existe dicho cliente o hay un error de conexión.		
 		 */
 		logger.info("recupera el cliente por nro de cliente.");

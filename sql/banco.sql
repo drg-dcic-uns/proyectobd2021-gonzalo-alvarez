@@ -388,6 +388,7 @@ CREATE TABLE Plazo_Cliente (
     GRANT SELECT, INSERT, UPDATE ON banco.Cliente_CA TO 'empleado'@'%';
     GRANT SELECT, INSERT, UPDATE ON banco.Cliente TO 'empleado'@'%';
     GRANT SELECT, INSERT, UPDATE ON banco.Pago TO 'empleado'@'%';
+    GRANT EXECUTE ON PROCEDURE banco.pagarCuota to 'empleado'@'%';
 
 
     #Creamos la vista para atm
