@@ -67,7 +67,7 @@ public class DAOPagoImpl implements DAOPago {
 
 
 		/**
-		 * TODO Registra los pagos de cuotas definidos en cuotasAPagar.
+		 * TODO HECHO Registra los pagos de cuotas definidos en cuotasAPagar.
 		 * 
 		 * nroCliente asume que esta validado
 		 * nroPrestamo asume que está validado

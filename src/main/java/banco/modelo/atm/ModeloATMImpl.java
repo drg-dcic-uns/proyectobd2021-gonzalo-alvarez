@@ -272,38 +272,29 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.info("Realiza la extraccion de ${} sobre la cuenta", monto);
 		
 		/**
-		 * TODO Deberá extraer de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
+		 * TODO HECHO Deberá extraer de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si las propiedades codigoATM o tarjeta no tienen valores
 		 */		
 		
-		Double saldo;
+		String resultado =  ModeloATM.EXTRACCION_EXITOSA;
 		PreparedStatement cargar;
 		try {
 			
-			cargar = conexion.prepareStatement("start transaction;");
-			cargar.execute();
-			
-			cargar = conexion.prepareStatement("SELECT saldo FROM (trans_cajas_ahorro NATURAL JOIN tarjeta)  WHERE nro_tarjeta= ? for update;"); 
-			cargar.setString(1, this.tarjeta);
-			cargar.execute();
-			
-			cargar = conexion.prepareStatement("UPDATE (trans_cajas_ahorro NATURAL JOIN tarjeta)  SET saldo = saldo - ?  WHERE nro_tarjeta= ?;"); 
+			cargar = conexion.prepareStatement("call extraer(?,?,?)");
 			cargar.setDouble(1, monto);
-			cargar.setString(2, this.tarjeta);
-			cargar.executeUpdate();
-
-			cargar = conexion.prepareStatement("commit;"); 
-			cargar.execute();
+			cargar.setString(2, tarjeta);
+			cargar.setInt(3, codigoATM);
 			
-			cargar = conexion.prepareStatement( "SELECT saldo FROM trans_cajas_ahorro  WHERE nro_tarjeta= ? ;"); 
-			cargar.setString(1, this.tarjeta);
 			cargar.execute();
 			
 			ResultSet rs = cargar.getResultSet();
-			saldo = rs.getDouble("saldo");
-			
-			JOptionPane.showMessageDialog(null, rs.getDouble("saldo"));
+			if(rs.next()) {
+				resultado = rs.getString("resultado");
+				if (!resultado.equals(ModeloATM.EXTRACCION_EXITOSA)) {
+					throw new Exception(resultado);
+				}
+			}
 			
 		}catch (SQLException ex) {
 			logger.error("SQLException: " + ex.getMessage());
@@ -313,11 +304,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		}
 		
 		
-		String resultado = ModeloATM.EXTRACCION_EXITOSA;
-		
-		if (!resultado.equals(ModeloATM.EXTRACCION_EXITOSA)) {
-			throw new Exception(resultado);
-		}
 		return this.obtenerSaldo();
 
 	}
@@ -330,28 +316,32 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		int cuenta = 0;
 
 		/**
-		 * TODO HECHO (TESTEAR) Verifica que el codigo de la cuenta sea valido. 
+		 * TODO HECHO Verifica que el codigo de la cuenta sea valido. 
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si la cuenta es vacia, entero negativo o no puede generar el parsing.
 		 * retorna la cuenta en formato int
 		 */	
+		PreparedStatement cargar;
 		try {
 			cuenta = Integer.parseInt(p_cuenta);
 			if(cuenta < 0)
 				throw new Exception("El codigo de cuenta es negativo");
 			
 			
+			String sql = "SELECT * FROM Tarjeta WHERE nro_ca = ?";
+			cargar = conexion.prepareStatement(sql);
+			cargar.setInt(1, cuenta);
+			cargar.execute();
+			ResultSet rs = cargar.getResultSet();
+			
+			if(!rs.next())
+				throw new Exception("El codigo de cuenta no existe");
+			logger.info("Encontró la cuenta en la BD.");
+			
 		} catch (NumberFormatException e) {
 			throw new Exception("El codigo de cuenta no tiene un formato válido.");
 		}
-		
-		
-		String sql = "SELECT * FROM Caja_Ahorro WHERE nro_ca = ?";
-		ResultSet rs = consulta(sql);
-		
-		if(!rs.next())
-			throw new Exception("El codigo de cuenta no existe");
-		logger.info("Encontró la cuenta en la BD.");
+	
         return cuenta;
 	}	
 	
@@ -360,17 +350,38 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.info("Realiza la transferencia de ${} sobre a la cuenta {}", monto, cajaDestino);
 		
 		/**
-		 * TODO Deberá extraer de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
+		 * TODO Deberá transferir de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si las propiedades codigoATM o tarjeta no tienen valores
 		 */		
-		
-
-		String resultado = ModeloATM.TRANSFERENCIA_EXITOSA;
-		
-		if (!resultado.equals(ModeloATM.TRANSFERENCIA_EXITOSA)) {
-			throw new Exception(resultado);
+		String resultado =  ModeloATM.TRANSFERENCIA_EXITOSA;
+		JOptionPane.showMessageDialog(null, "Monto" + monto + "cajaDestino" + cajaDestino);
+		PreparedStatement cargar;
+		try {
+			
+			cargar = conexion.prepareStatement("call transferir(?,?,?,?)");
+			cargar.setDouble(1, monto);
+			cargar.setString(2, tarjeta);
+			cargar.setInt(3, codigoATM);
+			cargar.setInt(4, cajaDestino);
+			
+			cargar.execute();
+			
+			ResultSet rs = cargar.getResultSet();
+			if(rs.next()) {
+				resultado = rs.getString("resultado");
+				if (!resultado.equals(ModeloATM.TRANSFERENCIA_EXITOSA)) {
+					throw new Exception(resultado);
+				}
+			}
+			
+		}catch (SQLException ex) {
+			logger.error("SQLException: " + ex.getMessage());
+			logger.error("SQLState: " + ex.getSQLState());
+			logger.error("VendorError: " + ex.getErrorCode());
+			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
 		}
+
 		return this.obtenerSaldo();
 	}
 
