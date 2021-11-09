@@ -356,6 +356,120 @@ CREATE TABLE Plazo_Cliente (
 
 
 
+delimiter !
+CREATE PROCEDURE extraer (IN monto DECIMAL(16,2), IN tarjeta INT, IN atm INT)
+BEGIN
+	DECLARE saldo_actual DECIMAL(16,2);
+	DECLARE cliente INT;
+	DECLARE numero_cuenta INT;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
+			SELECT "SQLEXCEPTION!, transacción abortada" AS resultado;
+			ROLLBACK;
+		END;
+	START TRANSACTION;
+		IF EXISTS (SELECT saldo FROM (trans_cajas_ahorro NATURAL JOIN tarjeta)  WHERE nro_tarjeta= tarjeta) THEN
+			SELECT saldo, nro_ca, nro_cliente INTO saldo_actual, numero_cuenta, cliente FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = tarjeta FOR UPDATE;
+			IF saldo_actual >= monto THEN 
+				
+				INSERT INTO transaccion (fecha,hora,monto) VALUES (CURDATE(), DATE_FORMAT(NOW(), "%H:%i:%S" ), monto);
+				INSERT INTO transaccion_por_caja (nro_trans,cod_caja) VALUES (LAST_INSERT_ID(), atm);
+				INSERT INTO extraccion (nro_trans, nro_cliente, nro_ca) VALUES (LAST_INSERT_ID(), cliente, numero_cuenta);
+				UPDATE caja_ahorro SET saldo = saldo_actual - monto WHERE nro_ca = numero_cuenta;
+				SELECT "Extraccion Exitosa" AS resultado;
+			ELSE
+				SELECT "Saldo insuficiente" AS resultado;
+			END IF;
+		ELSE
+			SELECT "Error: No existe la cuenta" AS resultado;
+		END IF;
+		commit;
+END; !
+delimiter ;
+
+
+delimiter !
+CREATE PROCEDURE transferir(IN monto DECIMAL(16,2), IN tarjeta INT, IN atm INT, IN cuenta_destino INT)
+BEGIN
+	DECLARE saldo_actual_origen DECIMAL(16,2);
+	DECLARE saldo_actual_destino DECIMAL(16,2);
+	DECLARE cliente INT;
+	DECLARE cuenta_origen INT;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
+		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
+			SELECT "SQLEXCEPTION!, transacción abortada" AS resultado;
+			ROLLBACK;
+		END;
+	START TRANSACTION;
+		IF EXISTS (SELECT * FROM caja_ahorro WHERE nro_ca=cuenta_destino) 
+		AND EXISTS (SELECT * FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = tarjeta) THEN
+
+			SELECT saldo,nro_ca,nro_cliente INTO saldo_actual_origen, cuenta_origen, cliente FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = tarjeta FOR UPDATE;
+			SELECT saldo INTO saldo_actual_destino FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_ca = cuenta_destino FOR UPDATE;
+			IF saldo_actual_origen >= monto THEN 
+				
+				INSERT INTO transaccion (fecha,hora,monto) VALUES (CURDATE(), DATE_FORMAT(NOW(), "%H:%i:%S" ), monto);
+				INSERT INTO transaccion_por_caja (nro_trans,cod_caja) VALUES (LAST_INSERT_ID(), atm);
+				INSERT INTO transferencia (nro_trans, nro_cliente, origen, destino) VALUES (LAST_INSERT_ID(), cliente, cuenta_origen, cuenta_destino);
+				UPDATE caja_ahorro SET saldo = saldo_actual_origen - monto WHERE nro_ca = cuenta_origen;
+				UPDATE caja_ahorro SET saldo = saldo_actual_destino + monto WHERE nro_ca = cuenta_destino;
+				SELECT "Extraccion Exitosa" AS resultado;
+			ELSE
+				SELECT "Saldo insuficiente" AS resultado;
+			END IF;
+		ELSE
+			SELECT "Error: No existe alguna de las cuentas" AS resultado;
+		END IF;
+		commit;
+END; !
+delimiter ;
+
+
+
+
+USE banco;
+delimiter !
+CREATE PROCEDURE pagarCuota(IN prestamo INT, IN pago INT) 
+BEGIN
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK 
+			SELECT 'SQLEXCEPTION!, transacción abortada' AS resultado;
+			ROLLBACK;
+		END;
+START TRANSACTION;
+	IF EXISTS (SELECT * FROM Pago WHERE nro_pago=pago and nro_prestamo = prestamo) THEN
+		SELECT fecha_pago FROM Pago WHERE nro_pago=pago and nro_prestamo = prestamo and fecha_pago IS NULL FOR UPDATE;
+		UPDATE PAGO SET fecha_pago = CURDATE() WHERE fecha_pago IS NULL and nro_pago = pago and nro_prestamo = prestamo;
+		SELECT "El pago se realizo con exito" AS resultado;
+	ELSE
+		SELECT "No se pudo cambiar la fecha de pago." AS resultado;
+	END IF; 
+	COMMIT; 
+END; !
+
+delimiter ;
+
+
+
+delimiter !
+CREATE TRIGGER insertar_prestamo
+AFTER INSERT ON Prestamo
+FOR EACH ROW
+BEGIN
+	DECLARE cuotas INT;
+	DECLARE indice INT DEFAULT 1;
+	SELECT NEW.cant_meses INTO cuotas;
+	WHILE indice <= cuotas DO  
+		INSERT INTO Pago(nro_prestamo, nro_pago, fecha_venc, fecha_pago) 
+		VALUES (NEW.nro_prestamo, indice, date_add(NEW.fecha, interval indice month), NULL);
+		SET indice = indice + 1;
+	END WHILE;
+END; !
+delimiter ;
+
+
+
+
 
 # CREACION DE USUARIOS -----------------------------------------------------------------------------------------------------------
 
@@ -450,3 +564,5 @@ CREATE TABLE Plazo_Cliente (
 #Otorgamos privilegios correspondientes
     GRANT SELECT, UPDATE ON banco.Tarjeta TO 'atm'@'localhost';
     GRANT SELECT ON banco.trans_cajas_ahorro TO 'atm'@'localhost';
+    GRANT EXECUTE ON PROCEDURE banco.extraer to 'atm'@'localhost';
+    GRANT EXECUTE ON PROCEDURE banco.transferir to 'atm'@'localhost';
