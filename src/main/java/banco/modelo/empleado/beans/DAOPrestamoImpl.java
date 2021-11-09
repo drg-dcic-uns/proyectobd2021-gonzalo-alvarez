@@ -55,9 +55,10 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("cuota : {}", prestamo.getValorCuota());
 		logger.debug("legajo : {}", prestamo.getLegajo());
 		logger.debug("cliente : {}", prestamo.getNroCliente());
+		PreparedStatement crear = null;
 		
 		try {
-			PreparedStatement crear = conexion.prepareStatement(sql);
+			crear = conexion.prepareStatement(sql);
 			crear.setInt(1,prestamo.getCantidadMeses());
 			crear.setDouble(2,prestamo.getMonto());
 			crear.setDouble(3,prestamo.getTasaInteres());
@@ -76,6 +77,8 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		} finally {
+			crear.close();
 		}
 
 	}
@@ -97,9 +100,9 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.debug("SELECT * FROM prestamo WHERE nro_prestamo = {}", nroPrestamo);
 
 		PrestamoBean prestamo = null;
-		
+		PreparedStatement recuperar = null;
 		try {
-			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar = conexion.prepareStatement(sql);
 			recuperar.setInt(1, nroPrestamo);
 			recuperar.execute();
 			ResultSet rs = recuperar.getResultSet();
@@ -124,6 +127,8 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		} finally {
+			recuperar.close();
 		}
 		
 		return prestamo;

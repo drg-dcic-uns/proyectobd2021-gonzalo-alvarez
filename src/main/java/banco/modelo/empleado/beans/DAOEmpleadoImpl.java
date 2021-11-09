@@ -34,9 +34,9 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 		logger.debug("SELECT * FROM empleado WHERE legajo = {}", legajo);
 
 		EmpleadoBean empleado = null;
-		
+		PreparedStatement recuperar = null;
 		try {
-			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar = conexion.prepareStatement(sql);
 			recuperar.setInt(1, legajo);
 			recuperar.execute();
 			ResultSet rs = recuperar.getResultSet();
@@ -62,6 +62,8 @@ public class DAOEmpleadoImpl implements DAOEmpleado {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		}finally {
+			recuperar.close();
 		}
 		
 		return empleado;

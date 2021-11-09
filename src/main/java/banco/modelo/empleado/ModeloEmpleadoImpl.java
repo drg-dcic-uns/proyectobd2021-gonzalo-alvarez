@@ -58,9 +58,9 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		
 		logger.debug("SELECT legajo, password FROM empleado WHERE legajo = {} and password = md5({})", legajo, password);
 		
-		
+		PreparedStatement autenticar = null;
 		try {
-			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar = conexion.prepareStatement(sql);
 			autenticar.setString(1, legajo);
 			autenticar.setString(2, password);
 			autenticar.execute();
@@ -77,6 +77,8 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
+		}finally {
+			autenticar.close();
 		}
 		return ret;
 	}
@@ -106,9 +108,9 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		
 		logger.debug("SELECT DISTINCT tipo_doc FROM empleado");
 		ArrayList<String> tipos = new ArrayList<String>();
-		
+		PreparedStatement obtener = null;
 		try {
-			PreparedStatement obtener = conexion.prepareStatement(sql);
+			obtener = conexion.prepareStatement(sql);
 			obtener.execute();
 			ResultSet rs = obtener.getResultSet();
 
@@ -121,8 +123,10 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
-			
+		}finally {
+			obtener.close();
 		}
+		
 		return tipos;
 	}	
 
@@ -143,8 +147,9 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.debug("SELECT tasa FROM tasa_prestamo WHERE {} > monto_inf and {} < monto_sup and periodo = {}", monto, monto, cantidadMeses);
 		
 		double tasa = 0;
+		PreparedStatement autenticar = null;
 		try {
-			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar = conexion.prepareStatement(sql);
 			autenticar.setDouble(1, monto);
 			autenticar.setDouble(2, monto);
 			autenticar.setInt(3, cantidadMeses);
@@ -163,6 +168,8 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
+		}finally {
+			autenticar.close();
 		}
 		return tasa;
 		
@@ -203,10 +210,10 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		
 		logger.debug("SELECT periodo FROM tasa_prestamo WHERE {} > monto_inf and {} < monto_sup",monto);
 		
-
+		PreparedStatement cargar = null;
 		ArrayList<Integer> cantMeses = new ArrayList<Integer>();
 		try {
-			PreparedStatement cargar = conexion.prepareStatement(sql);
+			cargar = conexion.prepareStatement(sql);
 			cargar.setDouble(1, monto);
 			cargar.setDouble(2, monto);
 			cargar.execute();
@@ -223,6 +230,8 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		} finally {
+			cargar.close();
 		}
 		
 		return cantMeses;
@@ -244,9 +253,9 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		
 		logger.debug("SELECT nro_cliente FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = {}", nroCliente);
 		
-		
+		PreparedStatement autenticar = null;
 		try {
-			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar = conexion.prepareStatement(sql);
 			autenticar.setInt(1, nroCliente);
 			autenticar.execute();
 			ResultSet rs = autenticar.getResultSet();
@@ -261,6 +270,8 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
+		}finally {
+			autenticar.close();
 		}
 		return ret;
 	}

@@ -40,9 +40,9 @@ public class DAOClienteImpl implements DAOCliente {
 		logger.debug("SELECT * FROM cliente WHERE tipo_doc = {} and nro_doc = {}", tipoDoc, nroDoc);
 
 		ClienteBean cliente = null;
-		
+		PreparedStatement recuperar = null;
 		try {
-			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar = conexion.prepareStatement(sql);
 			recuperar.setString(1, tipoDoc);
 			recuperar.setInt(2, nroDoc);
 			recuperar.execute();
@@ -67,6 +67,8 @@ public class DAOClienteImpl implements DAOCliente {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		}finally {
+			recuperar.close();
 		}
 		
 		return cliente;		
@@ -87,9 +89,9 @@ public class DAOClienteImpl implements DAOCliente {
 		logger.debug("SELECT * FROM cliente WHERE nro_cliente = {}", nroCliente);
 
 		ClienteBean cliente = null;
-		
+		PreparedStatement recuperar = null;
 		try {
-			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			recuperar = conexion.prepareStatement(sql);
 			recuperar.setInt(1, nroCliente);
 			recuperar.execute();
 			ResultSet rs = recuperar.getResultSet();
@@ -113,6 +115,8 @@ public class DAOClienteImpl implements DAOCliente {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		}finally {
+			recuperar.close();
 		}
 		
 		return cliente;		

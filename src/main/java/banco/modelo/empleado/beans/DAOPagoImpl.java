@@ -36,9 +36,9 @@ public class DAOPagoImpl implements DAOPago {
 		logger.debug("SELECT * FROM pago WHERE nro_prestamo = {}", nroPrestamo);
 		
 		ArrayList<PagoBean> lista = new ArrayList<PagoBean>();
-		
+		PreparedStatement obtener = null;
 		try {
-			PreparedStatement obtener = conexion.prepareStatement(sql);
+			obtener = conexion.prepareStatement(sql);
 			obtener.setInt(1, nroPrestamo);
 			obtener.execute();
 			ResultSet rs = obtener.getResultSet();
@@ -58,6 +58,8 @@ public class DAOPagoImpl implements DAOPago {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
 			
+		}finally {
+			obtener.close();
 		}
 		return lista;
 	}
@@ -79,11 +81,11 @@ public class DAOPagoImpl implements DAOPago {
 		logger.info("Inicia el pago de las {} cuotas del prestamo {}", cuotasAPagar.size(), nroPrestamo);
 		
 		String sql = "call pagarCuota(?,?)";
-		
+		PreparedStatement crear = null;
 		try {
 			for(int i = 0; i < cuotasAPagar.size() ; i++){
 				logger.debug("call pagarCuota({},{})", nroPrestamo, cuotasAPagar.get(i));
-				PreparedStatement crear = conexion.prepareStatement(sql);
+				crear = conexion.prepareStatement(sql);
 				crear.setDouble(1,nroPrestamo);
 				crear.setInt(2,cuotasAPagar.get(i));
 				crear.executeUpdate();
@@ -94,6 +96,8 @@ public class DAOPagoImpl implements DAOPago {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		}finally {
+			crear.close();
 		}
 	}
 	

@@ -44,9 +44,9 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 		ClienteBean cliente = null;
 		
 		ArrayList<ClienteMorosoBean> morosos = new ArrayList<ClienteMorosoBean>();
-		
+		PreparedStatement recuperar = null;
 		try {
-			PreparedStatement recuperar = conexion.prepareStatement(sql);
+			 recuperar = conexion.prepareStatement(sql);
 			recuperar.execute();
 			ResultSet rs = recuperar.getResultSet();
 			
@@ -66,6 +66,8 @@ public class DAOClienteMorosoImpl implements DAOClienteMoroso {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
 			
+		} finally {
+			recuperar.close();
 		}
 				
 		return morosos;

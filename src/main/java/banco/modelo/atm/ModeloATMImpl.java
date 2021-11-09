@@ -67,9 +67,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.debug("SELECT nro_tarjeta, PIN FROM tarjeta WHERE nro_tarjeta = {} and PIN = md5({})", tarjeta, pin);
 		
-		
+		PreparedStatement autenticar = null;
 		try {
-			PreparedStatement autenticar = conexion.prepareStatement(sql);
+			autenticar = conexion.prepareStatement(sql);
 			autenticar.setString(1, tarjeta);
 			autenticar.setString(2, pin);
 			autenticar.execute();
@@ -86,6 +86,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
+		}finally {
+			autenticar.close();
 		}
 		return ret;
 	}
@@ -110,9 +112,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.debug("SELECT * FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} ORDER BY fecha DESC, hora DESC;",tarjeta);
 		
-		
+		PreparedStatement obtener = null;
 		try {
-			PreparedStatement obtener = conexion.prepareStatement(sql);
+			obtener = conexion.prepareStatement(sql);
 			obtener.setString(1, tarjeta);
 			obtener.execute();
 			ResultSet rs = obtener.getResultSet();
@@ -129,7 +131,10 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
 			
+		}finally {
+			obtener.close();
 		}
+		
 		return saldo_obtenido;
 	}	
 
@@ -152,10 +157,10 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} LIMIT {};",tarjeta,cantidad);
 		
-
+		PreparedStatement cargar = null;
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
 		try {
-			PreparedStatement cargar = conexion.prepareStatement(sql);
+			cargar = conexion.prepareStatement(sql);
 			cargar.setString(1, tarjeta);
 			cargar.setInt(2, cantidad);
 			cargar.execute();
@@ -183,17 +188,15 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 				
 				lista.add(fila);
 			}
-			/*
-			} else {
-				throw new Exception("No se pudo obtener el saldo");	
-			}*/
-			
+
 		}catch (SQLException ex) {
 			logger.error("SQLException: " + ex.getMessage());
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
 			
+		} finally {
+			cargar.close();
 		}
 		return lista;
 	}	
@@ -227,9 +230,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		Date actual = new Date();
 		if(hasta.after(actual))
 			throw new Exception("La fecha hasta es mayor a la fecha actual.");
-			
+		PreparedStatement cargar = null;
 		try {
-			PreparedStatement cargar = conexion.prepareStatement(sql);
+			 cargar = conexion.prepareStatement(sql);
 			cargar.setString(1, tarjeta);
 			cargar.setDate(2, Fechas.convertirDateADateSQL(desde));
 			cargar.setDate(3, Fechas.convertirDateADateSQL(hasta));
@@ -263,6 +266,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D.");
+		} finally {
+			cargar.close();
 		}
 		return lista;
 	}
@@ -278,7 +283,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 */		
 		
 		String resultado =  ModeloATM.EXTRACCION_EXITOSA;
-		PreparedStatement cargar;
+		PreparedStatement cargar = null;
 		try {
 			
 			cargar = conexion.prepareStatement("call extraer(?,?,?)");
@@ -301,6 +306,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		} finally {
+			cargar.close();
 		}
 		
 		
@@ -321,7 +328,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 * 		Debe generar excepción si la cuenta es vacia, entero negativo o no puede generar el parsing.
 		 * retorna la cuenta en formato int
 		 */	
-		PreparedStatement cargar;
+		PreparedStatement cargar = null;
 		try {
 			cuenta = Integer.parseInt(p_cuenta);
 			if(cuenta < 0)
@@ -340,6 +347,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			
 		} catch (NumberFormatException e) {
 			throw new Exception("El codigo de cuenta no tiene un formato válido.");
+		} finally {
+			cargar.close();
 		}
 	
         return cuenta;
@@ -350,13 +359,13 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.info("Realiza la transferencia de ${} sobre a la cuenta {}", monto, cajaDestino);
 		
 		/**
-		 * TODO Deberá transferir de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
+		 * TODO HECHO Deberá transferir de la cuenta del cliente el monto especificado (ya validado) y de obtener el saldo de la cuenta como resultado.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 * 		Debe generar excepción si las propiedades codigoATM o tarjeta no tienen valores
 		 */		
 		String resultado =  ModeloATM.TRANSFERENCIA_EXITOSA;
 		JOptionPane.showMessageDialog(null, "Monto" + monto + "cajaDestino" + cajaDestino);
-		PreparedStatement cargar;
+		PreparedStatement cargar = null;
 		try {
 			
 			cargar = conexion.prepareStatement("call transferir(?,?,?,?)");
@@ -380,6 +389,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
+		} finally {
+			cargar.close();
 		}
 
 		return this.obtenerSaldo();
