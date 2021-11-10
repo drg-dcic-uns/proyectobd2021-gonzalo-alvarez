@@ -563,6 +563,7 @@ delimiter ;
 
 #Otorgamos privilegios correspondientes
     GRANT SELECT, UPDATE ON banco.Tarjeta TO 'atm'@'localhost';
+    GRANT SELECT ON banco.caja_ahorro TO 'atm'@'localhost';
     GRANT SELECT ON banco.trans_cajas_ahorro TO 'atm'@'localhost';
     GRANT EXECUTE ON PROCEDURE banco.extraer to 'atm'@'localhost';
     GRANT EXECUTE ON PROCEDURE banco.transferir to 'atm'@'localhost';

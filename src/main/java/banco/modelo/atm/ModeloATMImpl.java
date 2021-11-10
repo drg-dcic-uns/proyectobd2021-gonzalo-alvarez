@@ -100,17 +100,15 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		if (this.tarjeta == null ) {
 			throw new Exception("El cliente no ingresó la tarjeta");
 		}
-		
-
 		/** 
 		 *  TODO HECHO Obtiene el saldo.
 		 *      Debe capturar la excepción SQLException y propagar una Exception más amigable.
 		 */
 		Double saldo_obtenido = null;
 		
-		String sql = "SELECT * FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? ORDER BY fecha DESC, hora DESC;";
+		String sql = "SELECT saldo FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = ?";
 		
-		logger.debug("SELECT * FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} ORDER BY fecha DESC, hora DESC;",tarjeta);
+		logger.debug("SELECT saldo FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = {}",tarjeta);
 		
 		PreparedStatement obtener = null;
 		try {
@@ -153,9 +151,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
-		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
+		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? ORDER BY fecha, hora DESC LIMIT ?;";
 		
-		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} LIMIT {};",tarjeta,cantidad);
+		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} ORDER BY fecha, hora DESC LIMIT {};",tarjeta,cantidad);
 		
 		PreparedStatement cargar = null;
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
@@ -213,9 +211,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 				
 		logger.info("Busca las ultimas transacciones en la BD de la tarjeta {} entre las fechas {} y {}",Integer.valueOf(this.tarjeta.trim()), desde, hasta);
 
-		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha > ? and fecha < ?)";
+		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha >= ? and fecha <= ?)";
 		
-		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha > {} and fecha < {})",tarjeta,desde,hasta);
+		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha >= {} and fecha =< {})",tarjeta,desde,hasta);
 		
 		/*Si alguna de las fechas son nulas, si la fecha desde es mayor a la fecha hasta, si la fecha hasta
 		es mayor a la fecha actual o si se produce algún error de conexión*/
@@ -364,7 +362,6 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 * 		Debe generar excepción si las propiedades codigoATM o tarjeta no tienen valores
 		 */		
 		String resultado =  ModeloATM.TRANSFERENCIA_EXITOSA;
-		JOptionPane.showMessageDialog(null, "Monto" + monto + "cajaDestino" + cajaDestino);
 		PreparedStatement cargar = null;
 		try {
 			
