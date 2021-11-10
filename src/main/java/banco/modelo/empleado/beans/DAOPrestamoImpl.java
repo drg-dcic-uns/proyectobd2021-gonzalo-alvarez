@@ -24,9 +24,6 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 	
 	@Override
 	public void crearActualizarPrestamo(PrestamoBean prestamo) throws Exception {
-
-		
-		
 		/**
 		 * TODO HECHO Crear o actualizar el Prestamo segun el PrestamoBean prestamo. 
 		 *      Si prestamo tiene nroPrestamo es una actualizacion, si el nroPrestamo es null entonces es un nuevo prestamo.
@@ -44,6 +41,9 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		if(prestamo.getNroPrestamo()==null){
 			sql = "INSERT INTO PRESTAMO (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES(CURDATE(),?,?,?,?,?,?,?)";
 		}else {
+			//Esta consulta queda inconsistente con los permisos otorgados ya que Empleado solo está permitido que seleccione e inserte en la tabla Préstamos. 
+			//La cátedra comunicó que nunca se llega a este caso por lo tanto no se modificaron los permisos para que Empleado pueda actualizar sobre dicha tabla y
+			//se decidió dejar el código de esta manera para que cumpla con la consigna.
 			sql = "UPDATE PRESTAMO SET fecha = CURDATE() ,cant_meses = ?,monto = ?,tasa_interes = ?,interes = ?,valor_cuota = ?,nro_cliente = ?,legajo = ?) WHERE nro_prestamo = ?";
 		}
 		
