@@ -148,15 +148,15 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 * TODO HECHO Deberá recuperar los ultimos movimientos del cliente, la cantidad está definida en el parámetro.
 		 * 		Debe capturar la excepción SQLException y propagar una Exception más amigable. 
 		 */
-		
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
-		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? ORDER BY fecha, hora DESC LIMIT ?;";
+		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
 		
-		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} ORDER BY fecha, hora DESC LIMIT {};",tarjeta,cantidad);
+		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} LIMIT {};",tarjeta,cantidad);
 		
-		PreparedStatement cargar = null;
+
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
+		PreparedStatement cargar = null;
 		try {
 			cargar = conexion.prepareStatement(sql);
 			cargar.setString(1, tarjeta);
@@ -172,20 +172,27 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 				fila.setTransaccionTipo(rs.getString("tipo"));
 				fila.setTransaccionMonto(rs.getDouble("monto"));
 				
-				fila.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
+				String codCaja = rs.getString("cod_caja");
+				Integer codigo = 0;
+				if(!codCaja.equals("NULL"))
+					codigo = Integer.parseInt(codCaja);
+				fila.setTransaccionCodigoCaja(codigo);
 				
-				fila.setCajaAhorroDestinoNumero(rs.getInt("destino"));	
+				String numeroDestino = rs.getString("destino");
+				Integer numeroD = 0;
+				if(!numeroDestino.equals("NULL"))
+					numeroD = Integer.parseInt(numeroDestino);
+				fila.setCajaAhorroDestinoNumero(numeroD);	
 				
 				lista.add(fila);
 			}
-
 		}catch (SQLException ex) {
 			logger.error("SQLException: " + ex.getMessage());
 			logger.error("SQLState: " + ex.getSQLState());
 			logger.error("VendorError: " + ex.getErrorCode());
 			throw new Exception("Error inesperado al consultar la B.D."+ ex.getMessage());
 			
-		} finally {
+		}finally {
 			cargar.close();
 		}
 		return lista;
