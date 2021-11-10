@@ -172,17 +172,9 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 				fila.setTransaccionTipo(rs.getString("tipo"));
 				fila.setTransaccionMonto(rs.getDouble("monto"));
 				
-				String codCaja = rs.getString("cod_caja");
-				Integer codigo = 0;
-				if(!codCaja.equals("NULL"))
-					codigo = Integer.parseInt(codCaja);
-				fila.setTransaccionCodigoCaja(codigo);
+				fila.setTransaccionCodigoCaja(rs.getInt("cod_caja"));
 				
-				String numeroDestino = rs.getString("destino");
-				Integer numeroD = 0;
-				if(!numeroDestino.equals("NULL"))
-					numeroD = Integer.parseInt(numeroDestino);
-				fila.setCajaAhorroDestinoNumero(numeroD);	
+				fila.setCajaAhorroDestinoNumero(rs.getInt("destino"));	
 				
 				lista.add(fila);
 			}

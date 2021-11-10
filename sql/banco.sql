@@ -409,11 +409,12 @@ BEGIN
 			IF saldo_actual_origen >= monto THEN 
 				
 				INSERT INTO transaccion (fecha,hora,monto) VALUES (CURDATE(), DATE_FORMAT(NOW(), "%H:%i:%S" ), monto);
+				INSERT INTO deposito (nro_trans, destino) VALUES (LAST_INSERT_ID(), cuenta_destino);
 				INSERT INTO transaccion_por_caja (nro_trans,cod_caja) VALUES (LAST_INSERT_ID(), atm);
 				INSERT INTO transferencia (nro_trans, nro_cliente, origen, destino) VALUES (LAST_INSERT_ID(), cliente, cuenta_origen, cuenta_destino);
 				UPDATE caja_ahorro SET saldo = saldo_actual_origen - monto WHERE nro_ca = cuenta_origen;
 				UPDATE caja_ahorro SET saldo = saldo_actual_destino + monto WHERE nro_ca = cuenta_destino;
-				SELECT "Extraccion Exitosa" AS resultado;
+				SELECT "Transferencia Exitosa" AS resultado;
 			ELSE
 				SELECT "Saldo insuficiente" AS resultado;
 			END IF;
