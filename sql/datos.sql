@@ -117,14 +117,9 @@ INSERT INTO Plazo_Cliente VALUES (1, 1);
 INSERT INTO Plazo_Cliente VALUES (2, 2);
 INSERT INTO Plazo_Cliente VALUES (3, 3);
 
-INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES ("2015/12/12", 4, 12000.50, 4.5, 8, 2000.00, 1, 1);
-INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES ("2016/04/12", 2, 20000.5, 5.4, 8, 1000.00, 2, 2);
-INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES ("2017/12/4", 7, 2400.67, 4.5, 8, 240.00, 3, 3);
-
-
-INSERT INTO Pago VALUES (1,"2016/01/02", "2017/01/01", 1);
-INSERT INTO Pago VALUES (2,"2017/01/02", "2017/01/01", 2);
-INSERT INTO Pago VALUES (3,"2018/01/02","2018/01/01", 3);
+INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES (CURDATE(), 4, 12000.50, 4.5, 8, 2000.00, 1, 1);
+INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES (CURDATE(), 2, 20000.5, 5.4, 8, 1000.00, 2, 2);
+INSERT INTO Prestamo (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES (CURDATE(), 7, 2400.67, 4.5, 8, 240.00, 3, 3);
 
 
 INSERT INTO Tasa_Prestamo VALUES (31,1200.00,1300.00, 4.1 );

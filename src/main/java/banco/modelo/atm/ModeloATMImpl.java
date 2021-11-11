@@ -63,7 +63,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		boolean ret = false;
 		logger.info("Se intenta autenticar la tarjeta {} con pin {}", tarjeta, pin);
 		
-		String sql = "SELECT nro_tarjeta, PIN FROM tarjeta WHERE nro_tarjeta =? and PIN = md5(?)";
+		String sql = "SELECT nro_tarjeta, PIN FROM tarjeta WHERE nro_tarjeta = ? and PIN = md5(?)";
 		
 		logger.debug("SELECT nro_tarjeta, PIN FROM tarjeta WHERE nro_tarjeta = {} and PIN = md5({})", tarjeta, pin);
 		
@@ -153,12 +153,12 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		String sql = "(SELECT fecha, hora, tipo, "
 				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
 				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ?)"
-				+ "ORDER BY fecha, hora DESC LIMIT ?;";
+				+ "ORDER BY fecha DESC, hora DESC LIMIT ?;";
 		
 		logger.debug("(SELECT fecha, hora, tipo, "
 				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
 				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {})"
-				+ "ORDER BY fecha, hora DESC LIMIT {};",tarjeta,cantidad);
+				+ "ORDER BY fecha DESC, hora DESC LIMIT {};",tarjeta,cantidad);
 		
 
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
@@ -219,7 +219,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		String sql = "(SELECT fecha, hora, tipo, "
 				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
 				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha >= ? and fecha <= ?))"
-				+ "ORDER BY fecha, hora DESC";
+				+ "ORDER BY fecha DESC, hora DESC";
 		
 		
 		/*Si alguna de las fechas son nulas, si la fecha desde es mayor a la fecha hasta, si la fecha hasta
@@ -239,7 +239,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		logger.debug("(SELECT fecha, hora, tipo, "
 				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
 				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha >= {} and fecha <= {}))"
-				+ "ORDER BY fecha, hora DESC;",tarjeta, desde, hasta);
+				+ "ORDER BY fecha DESC, hora DESC;",tarjeta, desde, hasta);
 		PreparedStatement cargar = null;
 		try {
 			 cargar = conexion.prepareStatement(sql);

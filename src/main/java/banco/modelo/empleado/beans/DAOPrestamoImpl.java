@@ -38,6 +38,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		
 		
 		String sql;
+		String tienePrestamo = "SELECT * FROM (pago NATURAL JOIN prestamo) WHERE fecha_pago is NULL and nro_cliente = ?;";
 		if(prestamo.getNroPrestamo()==null){
 			sql = "INSERT INTO PRESTAMO (fecha,cant_meses,monto,tasa_interes,interes,valor_cuota,nro_cliente,legajo) VALUES(CURDATE(),?,?,?,?,?,?,?)";
 		}else {
@@ -47,17 +48,27 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 			sql = "UPDATE PRESTAMO SET fecha = CURDATE() ,cant_meses = ?,monto = ?,tasa_interes = ?,interes = ?,valor_cuota = ?,nro_cliente = ?,legajo = ?) WHERE nro_prestamo = ?";
 		}
 		
-		logger.info("Creación o actualizacion del prestamo.");
-		logger.debug("meses : {}", prestamo.getCantidadMeses());
-		logger.debug("monto : {}", prestamo.getMonto());
-		logger.debug("tasa : {}", prestamo.getTasaInteres());
-		logger.debug("interes : {}", prestamo.getInteres());
-		logger.debug("cuota : {}", prestamo.getValorCuota());
-		logger.debug("legajo : {}", prestamo.getLegajo());
-		logger.debug("cliente : {}", prestamo.getNroCliente());
+		
 		PreparedStatement crear = null;
 		
 		try {
+			crear = conexion.prepareStatement(tienePrestamo);
+			logger.debug("SELECT * FROM (pago NATURAL JOIN prestamo) WHERE fecha_pago is NULL and nro_cliente = {};",prestamo.getNroCliente());
+			crear.setInt(1, prestamo.getNroCliente());
+			crear.execute();
+			ResultSet rs = crear.getResultSet();
+			if(rs.next())
+				throw new Exception ("El cliente ya tiene prestamos vigentes.");
+			
+			logger.info("Creación o actualizacion del prestamo.");
+			logger.debug("meses : {}", prestamo.getCantidadMeses());
+			logger.debug("monto : {}", prestamo.getMonto());
+			logger.debug("tasa : {}", prestamo.getTasaInteres());
+			logger.debug("interes : {}", prestamo.getInteres());
+			logger.debug("cuota : {}", prestamo.getValorCuota());
+			logger.debug("legajo : {}", prestamo.getLegajo());
+			logger.debug("cliente : {}", prestamo.getNroCliente());
+			
 			crear = conexion.prepareStatement(sql);
 			crear.setInt(1,prestamo.getCantidadMeses());
 			crear.setDouble(2,prestamo.getMonto());
@@ -96,6 +107,7 @@ public class DAOPrestamoImpl implements DAOPrestamo {
 		logger.info("Recupera el prestamo nro {}.", nroPrestamo);
 		
 		String sql = "SELECT * FROM prestamo WHERE nro_prestamo = ?";
+		
 		
 		logger.debug("SELECT * FROM prestamo WHERE nro_prestamo = {}", nroPrestamo);
 

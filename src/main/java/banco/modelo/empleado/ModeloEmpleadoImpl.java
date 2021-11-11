@@ -249,9 +249,9 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 		logger.info("Verifica si el cliente {} tiene algun prestamo que tienen cuotas por pagar.", nroCliente);
 		Integer ret = null;
 		
-		String sql = "SELECT nro_cliente FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = ?";
+		String sql = "SELECT nro_prestamo FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = ?";
 		
-		logger.debug("SELECT nro_cliente FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = {}", nroCliente);
+		logger.debug("SELECT nro_prestamo FROM pago NATURAL JOIN prestamo WHERE CURDATE() < fecha_venc and fecha_pago IS NULL and nro_cliente = {}", nroCliente);
 		
 		PreparedStatement autenticar = null;
 		try {
@@ -261,7 +261,7 @@ public class ModeloEmpleadoImpl extends ModeloImpl implements ModeloEmpleado {
 			ResultSet rs = autenticar.getResultSet();
 			
 			if(rs.next()) {
-				ret = rs.getInt("nro_cliente");
+				ret = rs.getInt("nro_prestamo");
 			}
 			
 		}catch (SQLException ex) {
