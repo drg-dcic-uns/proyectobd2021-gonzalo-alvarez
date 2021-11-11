@@ -150,9 +150,15 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		 */
 		logger.info("Busca las ultimas {} transacciones en la BD de la tarjeta {}",cantidad, Integer.valueOf(this.tarjeta.trim()));
 
-		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? LIMIT ?;";
+		String sql = "(SELECT fecha, hora, tipo, "
+				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
+				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ?)"
+				+ "ORDER BY fecha, hora DESC LIMIT ?;";
 		
-		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} LIMIT {};",tarjeta,cantidad);
+		logger.debug("(SELECT fecha, hora, tipo, "
+				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
+				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {})"
+				+ "ORDER BY fecha, hora DESC LIMIT {};",tarjeta,cantidad);
 		
 
 		ArrayList<TransaccionCajaAhorroBean> lista = new ArrayList<TransaccionCajaAhorroBean>();
@@ -210,9 +216,11 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 				
 		logger.info("Busca las ultimas transacciones en la BD de la tarjeta {} entre las fechas {} y {}",Integer.valueOf(this.tarjeta.trim()), desde, hasta);
 
-		String sql = "SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha >= ? and fecha <= ?)";
+		String sql = "(SELECT fecha, hora, tipo, "
+				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
+				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = ? and (fecha >= ? and fecha <= ?))"
+				+ "ORDER BY fecha, hora DESC";
 		
-		logger.debug("SELECT fecha, hora, tipo, CONCAT('-', monto) AS monto,cod_caja, destino FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha >= {} and fecha =< {})",tarjeta,desde,hasta);
 		
 		/*Si alguna de las fechas son nulas, si la fecha desde es mayor a la fecha hasta, si la fecha hasta
 		es mayor a la fecha actual o si se produce algún error de conexión*/
@@ -227,6 +235,11 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		Date actual = new Date();
 		if(hasta.after(actual))
 			throw new Exception("La fecha hasta es mayor a la fecha actual.");
+		
+		logger.debug("(SELECT fecha, hora, tipo, "
+				+ "IF((tipo = \"extraccion\" or tipo = \"debito\" or tipo = \"transferencia\" ), CONCAT('-', monto), monto) AS monto,cod_caja, destino "
+				+ "FROM (Tarjeta JOIN trans_cajas_ahorro ON Tarjeta.nro_ca = trans_cajas_ahorro.nro_ca) WHERE nro_tarjeta = {} and (fecha >= {} and fecha <= {}))"
+				+ "ORDER BY fecha, hora DESC;",tarjeta, desde, hasta);
 		PreparedStatement cargar = null;
 		try {
 			 cargar = conexion.prepareStatement(sql);
@@ -284,6 +297,8 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		try {
 			
 			cargar = conexion.prepareStatement("call extraer(?,?,?)");
+			logger.debug("call extraer({},{},{})", monto, tarjeta, codigoATM);
+			
 			cargar.setDouble(1, monto);
 			cargar.setString(2, tarjeta);
 			cargar.setInt(3, codigoATM);
@@ -333,6 +348,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 			
 			
 			String sql = "SELECT * FROM Tarjeta WHERE nro_ca = ?";
+			logger.debug("SELECT * FROM Tarjeta WHERE nro_ca = {}", cuenta);
 			cargar = conexion.prepareStatement(sql);
 			cargar.setInt(1, cuenta);
 			cargar.execute();
@@ -365,6 +381,7 @@ public class ModeloATMImpl extends ModeloImpl implements ModeloATM {
 		try {
 			
 			cargar = conexion.prepareStatement("call transferir(?,?,?,?)");
+			logger.debug("call transferir({},{},{},{})", monto, tarjeta, codigoATM, cajaDestino);
 			cargar.setDouble(1, monto);
 			cargar.setString(2, tarjeta);
 			cargar.setInt(3, codigoATM);

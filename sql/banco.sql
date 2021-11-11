@@ -362,9 +362,20 @@ BEGIN
 	DECLARE saldo_actual DECIMAL(16,2);
 	DECLARE cliente INT;
 	DECLARE numero_cuenta INT;
+
+    
+
+    DECLARE codigo_SQL  CHAR(5) DEFAULT '00000';     
+    DECLARE codigo_MYSQL INT DEFAULT 0;
+    DECLARE mensaje_error TEXT;
+
+
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
-			SELECT "SQLEXCEPTION!, transacción abortada" AS resultado;
+            GET DIAGNOSTICS CONDITION 1  codigo_MYSQL= MYSQL_ERRNO,  
+                                     codigo_SQL= RETURNED_SQLSTATE, 
+                                     mensaje_error= MESSAGE_TEXT;
+			SELECT 'SQLEXCEPTION!, transacción abortada' AS resultado, codigo_MySQL, codigo_SQL,  mensaje_error;  
 			ROLLBACK;
 		END;
 	START TRANSACTION;
@@ -395,9 +406,21 @@ BEGIN
 	DECLARE saldo_actual_destino DECIMAL(16,2);
 	DECLARE cliente INT;
 	DECLARE cuenta_origen INT;
+    DECLARE last_id INT;
+
+
+    DECLARE codigo_SQL  CHAR(5) DEFAULT '00000';     
+    DECLARE codigo_MYSQL INT DEFAULT 0;
+    DECLARE mensaje_error TEXT;
+
+
+
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION
 		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK
-			SELECT "SQLEXCEPTION!, transacción abortada" AS resultado;
+            GET DIAGNOSTICS CONDITION 1  codigo_MYSQL= MYSQL_ERRNO,  
+                                     codigo_SQL= RETURNED_SQLSTATE, 
+                                     mensaje_error= MESSAGE_TEXT;
+			SELECT 'SQLEXCEPTION!, transacción abortada' AS resultado, codigo_MySQL, codigo_SQL,  mensaje_error;     
 			ROLLBACK;
 		END;
 	START TRANSACTION;
@@ -405,13 +428,17 @@ BEGIN
 		AND EXISTS (SELECT * FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = tarjeta) THEN
 
 			SELECT saldo,nro_ca,nro_cliente INTO saldo_actual_origen, cuenta_origen, cliente FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_tarjeta = tarjeta FOR UPDATE;
-			SELECT saldo INTO saldo_actual_destino FROM (caja_ahorro NATURAL JOIN tarjeta) WHERE nro_ca = cuenta_destino FOR UPDATE;
+			SELECT saldo INTO saldo_actual_destino FROM (caja_ahorro) WHERE nro_ca = cuenta_destino FOR UPDATE;
 			IF saldo_actual_origen >= monto THEN 
-				
 				INSERT INTO transaccion (fecha,hora,monto) VALUES (CURDATE(), DATE_FORMAT(NOW(), "%H:%i:%S" ), monto);
-				INSERT INTO deposito (nro_trans, destino) VALUES (LAST_INSERT_ID(), cuenta_destino);
-				INSERT INTO transaccion_por_caja (nro_trans,cod_caja) VALUES (LAST_INSERT_ID(), atm);
-				INSERT INTO transferencia (nro_trans, nro_cliente, origen, destino) VALUES (LAST_INSERT_ID(), cliente, cuenta_origen, cuenta_destino);
+                SELECT last_insert_id() INTO last_id;
+				INSERT INTO transaccion_por_caja (nro_trans,cod_caja) VALUES (last_id, atm);
+				INSERT INTO transferencia (nro_trans, nro_cliente, origen, destino) VALUES (last_id, cliente, cuenta_origen, cuenta_destino);
+
+                INSERT INTO transaccion (fecha,hora,monto) VALUES (CURDATE(), DATE_FORMAT(NOW(), "%H:%i:%S" ), monto);
+                SELECT last_insert_id() INTO last_id;
+                INSERT INTO transaccion_por_caja (nro_trans, cod_caja) VALUES (last_id, atm);
+				INSERT INTO deposito (nro_trans, nro_ca) VALUES (last_id, cuenta_destino);
 				UPDATE caja_ahorro SET saldo = saldo_actual_origen - monto WHERE nro_ca = cuenta_origen;
 				UPDATE caja_ahorro SET saldo = saldo_actual_destino + monto WHERE nro_ca = cuenta_destino;
 				SELECT "Transferencia Exitosa" AS resultado;
@@ -432,9 +459,16 @@ USE banco;
 delimiter !
 CREATE PROCEDURE pagarCuota(IN prestamo INT, IN pago INT) 
 BEGIN
+
+    DECLARE codigo_SQL  CHAR(5) DEFAULT '00000';        
+    DECLARE codigo_MYSQL INT DEFAULT 0;
+    DECLARE mensaje_error TEXT;
 	DECLARE EXIT HANDLER FOR SQLEXCEPTION 
 		BEGIN # Si se produce una SQLEXCEPTION, se retrocede la transacción con ROLLBACK 
-			SELECT 'SQLEXCEPTION!, transacción abortada' AS resultado;
+			GET DIAGNOSTICS CONDITION 1  codigo_MYSQL= MYSQL_ERRNO,  
+                                     codigo_SQL= RETURNED_SQLSTATE, 
+                                     mensaje_error= MESSAGE_TEXT;
+			SELECT 'SQLEXCEPTION!, transacción abortada' AS resultado, codigo_MySQL, codigo_SQL, 
 			ROLLBACK;
 		END;
 START TRANSACTION;
